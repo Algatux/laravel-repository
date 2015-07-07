@@ -1,0 +1,23 @@
+{
+    "name": "algatux/laravel-repository",
+    "description": "Laravel 5 Model Repository Pattern",
+    "type": "library",
+    "require": {
+        "php": ">=5.5",
+        "illuminate/support": "5.1.*",
+        "illuminate/database": "5.1.*"
+    },
+    "autoload": {
+      "psr-4": {
+        "Algatux\\Repository\\": "src/"
+      }
+    },
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Alessandro Galli",
+            "email": "a.galli85@gmail.com"
+        }
+    ],
+    "minimum-stability": "stable"
+}
