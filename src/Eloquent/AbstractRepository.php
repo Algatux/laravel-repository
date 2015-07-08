@@ -2,10 +2,12 @@
 
 namespace Algatux\Repository\Eloquent;
 
+use Algatux\Repository\Contracts\QueryCriteriaInterface;
 use Algatux\Repository\Contracts\RepositoryInterface;
 use Algatux\Repository\Exceptions\ModelInstanceException;
 use Illuminate\Container\Container;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 
 /**
  * Class AbstractRepository
@@ -20,29 +22,52 @@ abstract class AbstractRepository implements RepositoryInterface
     /** @var Model */
     protected $model;
 
+    /** @var Collection[QueryCriteriaInterface] */
+    protected $criteriaList;
+
     /**
      * @param Container $container
      */
     public function __construct(Container $container)
     {
         $this->container = $container;
-        $this->model = $this->initModel();
+        $this->initModel();
+        $this->clearCriteria();
     }
 
     /**
+     * Exposes Eloquent Model
+     *
      * @return Model
      */
-    public function getModel()
+    public function expose()
     {
         return $this->model;
     }
 
     /**
-     * @return Model
+     * @param QueryCriteriaInterface $criteria
+     */
+    public function addCriteria(QueryCriteriaInterface $criteria)
+    {
+        $this->criteriaList->push($criteria);
+    }
+
+    /**
+     * Re-Inits a fresh new Model and criteria Collection
+     */
+    public function clearCriteria()
+    {
+        $this->initModel();
+        $this->initCriteria();
+    }
+
+    /**
      * @throws ModelInstanceException
      */
     protected function initModel()
     {
+
         $modelClassName = $this->modelClassName();
 
         /** @var Model $model */
@@ -52,8 +77,16 @@ abstract class AbstractRepository implements RepositoryInterface
             throw new ModelInstanceException($modelClassName);
         }
 
-        return $model;
+        $this->model = $model;
 
+    }
+
+    /**
+     * Inits Criteria list
+     */
+    protected function initCriteria()
+    {
+        $this->criteriaList = new Collection();
     }
 
     /**
