@@ -1,6 +1,7 @@
 {
     "name": "algatux/laravel-repository",
-    "description": "Laravel 5 Model Repository Pattern",
+    "description": "Laravel 5 Model Repository",
+    "keywords": ["Laravel", "Eloquent", "Models", "Repository", "Pattern"],
     "type": "library",
     "require": {
         "php": ">=5.5",
@@ -16,8 +17,12 @@
     "authors": [
         {
             "name": "Alessandro Galli",
-            "email": "a.galli85@gmail.com"
+            "email": "a.galli85@gmail.com",
+            "role": "Developer"
         }
     ],
+    "suggest": {
+        "laravel/laravel": "A PHP Framework For Web Artisans"
+    },
     "minimum-stability": "stable"
 }

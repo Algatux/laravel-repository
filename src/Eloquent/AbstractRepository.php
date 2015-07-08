@@ -5,8 +5,10 @@ namespace Algatux\Repository\Eloquent;
 use Algatux\Repository\Contracts\QueryCriteriaInterface;
 use Algatux\Repository\Contracts\RepositoryInterface;
 use Algatux\Repository\Exceptions\ModelInstanceException;
+use Algatux\Repository\Exceptions\RepositoryException;
 use Illuminate\Container\Container;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Collection;
 
 /**
@@ -35,6 +37,12 @@ abstract class AbstractRepository implements RepositoryInterface
         $this->clearCriteria();
     }
 
+    /**
+     * @param array $columns
+     * @param bool|true $reset
+     * @return Collection|null
+     * @throws ModelInstanceException
+     */
     public function filterByCriteria($columns = ['*'], $reset = true)
     {
         if ($reset) {
@@ -47,6 +55,26 @@ abstract class AbstractRepository implements RepositoryInterface
 
         }
         return $this->model->get($columns);
+    }
+
+    /**
+     * @param $id
+     * @param string $id_field
+     * @return Model
+     * @throws ModelNotFoundException
+     */
+    public function find($id, $id_field='id')
+    {
+        $result = $this->model->where($id_field,'=',$id)->first();
+
+        if (empty($result)) {
+            $e = new ModelNotFoundException();
+            $e->setModel($this->modelClassName());
+            throw $e;
+        }
+
+        return $result;
+
     }
 
     /**
