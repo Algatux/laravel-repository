@@ -35,6 +35,20 @@ abstract class AbstractRepository implements RepositoryInterface
         $this->clearCriteria();
     }
 
+    public function filterByCriteria($columns = ['*'], $reset = true)
+    {
+        if ($reset) {
+            $this->initModel();
+        }
+        /** @var AbstractQueryCriteria $criteria */
+        foreach ($this->criteriaList as $criteria) {
+
+            $this->model = $criteria->apply($this->model);
+
+        }
+        return $this->model->get($columns);
+    }
+
     /**
      * Exposes Eloquent Model
      *
