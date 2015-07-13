@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 namespace Algatux\Repository\Eloquent;
 
@@ -37,7 +37,7 @@ abstract class AbstractRepository implements RepositoryInterface
 
     /**
      * @param array $criteriaList
-     * @return Collection|null
+     * @return $this
      * @throws ModelInstanceException
      */
     public function filterByCriteria(array $criteriaList = [])
@@ -60,11 +60,12 @@ abstract class AbstractRepository implements RepositoryInterface
 
     /**
      * @param array $columns
+     * @return Collection
      */
     public function get($columns = ['*'])
     {
 
-        $this->model->all($columns);
+        return $this->model->get($columns);
 
     }
 
@@ -74,12 +75,12 @@ abstract class AbstractRepository implements RepositoryInterface
      * @return Model
      * @throws ModelNotFoundException
      */
-    public function find($id, $id_field='id')
+    public function find($id, $id_field = 'id')
     {
 
         $this->initModel();
 
-        $result = $this->model->where($id_field,'=',$id)->first();
+        $result = $this->model->where($id_field, '=', $id)->first();
 
         if (empty($result)) {
             $e = new ModelNotFoundException();
