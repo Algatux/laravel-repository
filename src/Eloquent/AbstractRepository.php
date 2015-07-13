@@ -2,10 +2,8 @@
 
 namespace Algatux\Repository\Eloquent;
 
-use Algatux\Repository\Contracts\QueryCriteriaInterface;
 use Algatux\Repository\Contracts\RepositoryInterface;
 use Algatux\Repository\Exceptions\ModelInstanceException;
-use Algatux\Repository\Exceptions\RepositoryException;
 use Illuminate\Container\Container;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -24,8 +22,8 @@ abstract class AbstractRepository implements RepositoryInterface
     /** @var Model */
     protected $model;
 
-    /** @var Collection[QueryCriteriaInterface] */
-    protected $criteriaList;
+    /** @var bool */
+    protected $modelHasCriteria;
 
     /**
      * @param Container $container
@@ -33,28 +31,41 @@ abstract class AbstractRepository implements RepositoryInterface
     public function __construct(Container $container)
     {
         $this->container = $container;
+        $this->modelHasCriteria = false;
         $this->initModel();
-        $this->clearCriteria();
     }
 
     /**
-     * @param array $columns
-     * @param bool|true $reset
+     * @param array $criteriaList
      * @return Collection|null
      * @throws ModelInstanceException
      */
-    public function filterByCriteria($columns = ['*'], $reset = true)
+    public function filterByCriteria(array $criteriaList = [])
     {
-        if ($reset) {
-            $this->initModel();
-        }
+
+        $this->initModel();
+
         /** @var AbstractQueryCriteria $criteria */
-        foreach ($this->criteriaList as $criteria) {
+        foreach ($criteriaList as $criteria) {
 
             $this->model = $criteria->apply($this->model);
 
         }
-        return $this->model->get($columns);
+
+        $this->modelHasCriteria = true;
+
+        return $this;
+
+    }
+
+    /**
+     * @param array $columns
+     */
+    public function get($columns = ['*'])
+    {
+
+        $this->model->all($columns);
+
     }
 
     /**
@@ -65,6 +76,9 @@ abstract class AbstractRepository implements RepositoryInterface
      */
     public function find($id, $id_field='id')
     {
+
+        $this->initModel();
+
         $result = $this->model->where($id_field,'=',$id)->first();
 
         if (empty($result)) {
@@ -80,28 +94,20 @@ abstract class AbstractRepository implements RepositoryInterface
     /**
      * Exposes Eloquent Model
      *
+     * @param bool $initModel
      * @return Model
      */
-    public function expose()
+    public function expose($initModel = false)
     {
+
+        if ($initModel) {
+
+            $this->initModel();
+
+        }
+
         return $this->model;
-    }
 
-    /**
-     * @param QueryCriteriaInterface $criteria
-     */
-    public function addCriteria(QueryCriteriaInterface $criteria)
-    {
-        $this->criteriaList->push($criteria);
-    }
-
-    /**
-     * Re-Inits a fresh new Model and criteria Collection
-     */
-    public function clearCriteria()
-    {
-        $this->initModel();
-        $this->initCriteria();
     }
 
     /**
@@ -110,25 +116,23 @@ abstract class AbstractRepository implements RepositoryInterface
     protected function initModel()
     {
 
-        $modelClassName = $this->modelClassName();
+        if ($this->modelHasCriteria or !$this->model) {
 
-        /** @var Model $model */
-        $model = $this->container->make($modelClassName);
+            $modelClassName = $this->modelClassName();
 
-        if (!$model instanceof Model) {
-            throw new ModelInstanceException($modelClassName);
+            /** @var Model $model */
+            $model = $this->container->make($modelClassName);
+
+            if (!$model instanceof Model) {
+                throw new ModelInstanceException($modelClassName);
+            }
+
+            $this->model = $model;
+
         }
 
-        $this->model = $model;
+        $this->modelHasCriteria = false;
 
-    }
-
-    /**
-     * Inits Criteria list
-     */
-    protected function initCriteria()
-    {
-        $this->criteriaList = new Collection();
     }
 
     /**
