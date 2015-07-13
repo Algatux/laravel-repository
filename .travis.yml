@@ -1,0 +1,18 @@
+language: php
+
+matrix:
+  include:
+    - php: 5.5
+    - php: 5.6
+    - php: hhvm
+    - php: 7.0
+  allow_failures:
+    - php: 7.0
+  fast_finish: true
+
+before_script:
+  - composer self-update
+  - composer install
+
+script:
+  - vendor/bin/phpunit tests/Repository/TestRepository.php

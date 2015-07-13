@@ -1,0 +1,3 @@
+**Laravel Repository**
+
+[![Latest Stable Version](https://poser.pugx.org/algatux/laravel-repository/v/stable)](https://packagist.org/packages/algatux/laravel-repository) [![Total Downloads](https://poser.pugx.org/algatux/laravel-repository/downloads)](https://packagist.org/packages/algatux/laravel-repository) [![Latest Unstable Version](https://poser.pugx.org/algatux/laravel-repository/v/unstable)](https://packagist.org/packages/algatux/laravel-repository) [![License](https://poser.pugx.org/algatux/laravel-repository/license)](https://packagist.org/packages/algatux/laravel-repository)
