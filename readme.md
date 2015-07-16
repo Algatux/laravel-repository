@@ -6,7 +6,7 @@
 
 Create a repository extending AbstractRepository, you only need to implement "modelClassName" method that must return the model (you want to "abstract") namespace
 
-```
+``` php
 
 namespace Gerold\Models\Repositories;
 
@@ -33,7 +33,7 @@ This will instantiate a new fresh model instance of the type you secified in you
 
 Obviously you can implement your methods using every standard API of Eloquent on the property.
 
-```
+``` php
 
     public function getAllActiveUsers()
     {
@@ -44,7 +44,7 @@ Obviously you can implement your methods using every standard API of Eloquent on
 
 $model property is exposed by "expose()" method to use it out of the repository if you need it
 
-```
+``` php
     /** @var User $userModel **/
     $userModel = $userRepository->expose();
     
