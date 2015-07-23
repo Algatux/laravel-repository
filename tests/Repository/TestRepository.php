@@ -48,6 +48,8 @@ class TestRepository extends \PHPUnit_Framework_TestCase
 
         $criteria->apply($model)->shouldBeCalled();
         $criteria->apply($model)->willReturn(null);
+        $criteria->criteriaName()->shouldBeCalled();
+        $criteria->criteriaName()->willReturn();
 
         $repo->filterByCriteria([$criteria->reveal()]);
 

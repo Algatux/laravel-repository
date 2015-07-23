@@ -3,8 +3,8 @@
 namespace Algatux\Repository\Eloquent;
 
 use Algatux\Repository\Contracts\RepositoryInterface;
+use Algatux\Repository\Exceptions\CriteriaNameNotStringException;
 use Algatux\Repository\Exceptions\ModelInstanceException;
-use Illuminate\Container\Container;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Collection;
@@ -22,13 +22,28 @@ abstract class AbstractRepository implements RepositoryInterface
     /** @var bool */
     protected $modelHasCriteria;
 
+    /** @var bool */
+    protected $useResultCache;
+
+    /** @var int */
+    protected $resultCacheLifeTime;
+
+    /** @var string */
+    protected $cacheResultName;
+
     /**
      * @throws ModelInstanceException
      */
     public function __construct()
     {
-        $this->modelHasCriteria = false;
         $this->initModel();
+    }
+
+    public function useCacheResult($use=true, $minutes=10)
+    {
+        $this->useResultCache = $use;
+        $this->resultCacheLifeTime = $minutes;
+        return $this->model;
     }
 
     /**
@@ -39,10 +54,12 @@ abstract class AbstractRepository implements RepositoryInterface
     public function filterByCriteria(array $criteriaList = [])
     {
 
-        $this->initModel();
+        $this->reset();
 
         /** @var AbstractQueryCriteria $criteria */
         foreach ($criteriaList as $criteria) {
+
+            $this->validateCriteria($criteria);
 
             $this->model = $criteria->apply($this->model);
 
@@ -74,7 +91,7 @@ abstract class AbstractRepository implements RepositoryInterface
     public function find($id, $id_field = 'id')
     {
 
-        $this->initModel();
+        $this->reset();
 
         $result = $this->model->where($id_field, '=', $id)->first();
 
@@ -99,12 +116,22 @@ abstract class AbstractRepository implements RepositoryInterface
 
         if ($initModel) {
 
-            $this->initModel();
+            $this->reset();
 
         }
 
         return $this->model;
 
+    }
+
+    /**
+     * Resets the model instance
+     *
+     * @throws ModelInstanceException
+     */
+    public function reset()
+    {
+        $this->initModel();
     }
 
     /**
@@ -128,6 +155,9 @@ abstract class AbstractRepository implements RepositoryInterface
 
         }
 
+        $this->useResultCache = false;
+        $this->resultCacheLifeTime = 10;
+        $this->cacheResultName = null;
         $this->modelHasCriteria = false;
 
     }
@@ -138,5 +168,23 @@ abstract class AbstractRepository implements RepositoryInterface
      * @return string
      */
     abstract protected function modelClassName();
+
+    /**
+     * @param $criteria
+     * @throws CriteriaNameNotStringException
+     */
+    public function validateCriteria(AbstractQueryCriteria $criteria)
+    {
+
+        if (!$criteria instanceof AbstractQueryCriteria) {
+            throw new \InvalidArgumentException('Arument passed is not an array of only criterias');
+        }
+
+        if (is_string($criteria->criteriaName())) {
+            throw new CriteriaNameNotStringException(get_class($criteria));
+
+        }
+
+    }
 
 }

@@ -53,4 +53,11 @@ abstract class AbstractQueryCriteria implements QueryCriteriaInterface
      */
     abstract protected function criteria(Model $model);
 
+    /**
+     * Must Return an unique criteria name
+     *
+     * @return string
+     */
+    abstract public function criteriaName();
+
 }

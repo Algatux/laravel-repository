@@ -9,4 +9,6 @@ interface QueryCriteriaInterface
 
     public function apply(Model $model);
 
+    public function criteriaName();
+
 }

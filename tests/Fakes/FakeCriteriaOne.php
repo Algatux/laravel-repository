@@ -27,4 +27,12 @@ class FakeCriteriaOne extends AbstractQueryCriteria
         return $model->where('field','=','1');
     }
 
+    /**
+     * @return string
+     */
+    public function criteriaName()
+    {
+        return "fake_criteria_one";
+    }
+
 }
