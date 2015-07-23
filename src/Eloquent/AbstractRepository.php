@@ -16,9 +16,6 @@ use Illuminate\Support\Collection;
 abstract class AbstractRepository implements RepositoryInterface
 {
 
-    /** @var Container */
-    protected $container;
-
     /** @var Model */
     protected $model;
 
@@ -26,11 +23,10 @@ abstract class AbstractRepository implements RepositoryInterface
     protected $modelHasCriteria;
 
     /**
-     * @param Container $container
+     * @throws ModelInstanceException
      */
-    public function __construct(Container $container)
+    public function __construct()
     {
-        $this->container = $container;
         $this->modelHasCriteria = false;
         $this->initModel();
     }
@@ -122,7 +118,7 @@ abstract class AbstractRepository implements RepositoryInterface
             $modelClassName = $this->modelClassName();
 
             /** @var Model $model */
-            $model = $this->container->make($modelClassName);
+            $model = new $modelClassName;
 
             if (!$model instanceof Model) {
                 throw new ModelInstanceException($modelClassName);

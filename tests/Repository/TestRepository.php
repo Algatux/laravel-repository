@@ -5,7 +5,8 @@ namespace Algatux\Repository\Test;
 use Algatux\Repository\Tests\Fakes\FakeCriteriaOne;
 use Algatux\Repository\Tests\Fakes\FakeModel;
 use Algatux\Repository\Tests\Fakes\FakeRepository;
-use Illuminate\Foundation\Application;
+use Illuminate\Container\Container;
+use Illuminate\Database\Eloquent\Model;
 
 require __DIR__ . '/../../vendor/autoload.php';
 
@@ -28,6 +29,7 @@ class TestRepository extends \PHPUnit_Framework_TestCase
         $app = $this->setupApplication();
         $repo = $app->make(FakeRepository::class);
 
+        $this->assertInstanceOf(Model::class, $repo->expose());
         $this->assertInstanceOf(FakeModel::class, $repo->expose());
 
     }
@@ -57,13 +59,10 @@ class TestRepository extends \PHPUnit_Framework_TestCase
     private function setupApplication()
     {
 
-        $model = $this->prophesize(FakeModel::class);
-
         // Create the application such that the config is loaded.
-        $app = new Application();
-        $app->setBasePath(__DIR__ . "/../../../");
-        $app->instance(FakeModel::class, $model->reveal());
-        return $app;
+        $container = new Container();
+
+        return $container;
 
     }
 

@@ -5,7 +5,8 @@
     "type": "library",
     "require": {
         "php": ">=5.5",
-        "laravel/framework" : "~5.1"
+        "illuminate/support" : "~5.1",
+        "illuminate/database" : "~5.1"
     },
     "require-dev": {
         "phpunit/phpunit": "^4.7"
@@ -24,9 +25,6 @@
             "role": "Developer"
         }
     ],
-    "suggest": {
-        "laravel/laravel": "A PHP Framework For Web Artisans"
-    },
     "config": {
         "preferred-install": "dist"
     },
