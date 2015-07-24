@@ -144,7 +144,7 @@ abstract class AbstractRepository implements RepositoryInterface
     /**
      * @throws ModelInstanceException
      */
-    protected function initModel()
+    private function initModel()
     {
 
         if ($this->modelHasCriteria or !$this->model) {
@@ -180,7 +180,7 @@ abstract class AbstractRepository implements RepositoryInterface
      * @param Builder $qb
      * @return string
      */
-    protected function generateQueryHash(Builder $qb)
+    private function generateQueryHash(Builder $qb)
     {
         return sha1($qb->toSql());
     }
@@ -214,7 +214,7 @@ abstract class AbstractRepository implements RepositoryInterface
      * @param string $queryHash
      * @return Collection|Model|null
      */
-    protected function fetchQueryFromCache($queryHash)
+    private function fetchQueryFromCache($queryHash)
     {
 
         if ($this->useResultCache) {
