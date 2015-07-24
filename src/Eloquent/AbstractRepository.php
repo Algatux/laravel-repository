@@ -182,7 +182,7 @@ abstract class AbstractRepository implements RepositoryInterface
      */
     private function generateQueryHash(Builder $qb)
     {
-        return sha1($qb->toSql());
+        return sha1($qb->toSql() . ' ' . serialize($qb->getBindings()));
     }
 
     /**
