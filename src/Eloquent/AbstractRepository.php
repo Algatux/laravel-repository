@@ -7,6 +7,7 @@ use Algatux\Repository\Exceptions\CriteriaNameNotStringException;
 use Algatux\Repository\Exceptions\ModelInstanceException;
 use Illuminate\Cache\Repository as CacheRepository;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Collection;
 
 /**
@@ -47,7 +48,7 @@ abstract class AbstractRepository implements RepositoryInterface
      * @param int $minutesLifeTime
      * @return $this
      */
-    public function useCacheResult($use=true, $minutesLifeTime=1)
+    protected function useCacheResult($use=true, $minutesLifeTime=1)
     {
         $this->useResultCache = $use;
         $this->resultCacheLifeTime = $minutesLifeTime;
@@ -82,19 +83,24 @@ abstract class AbstractRepository implements RepositoryInterface
     /**
      * Gets results based on actual conditions, will use cached result if previously specified
      *
+     * @param Builder $qb
      * @param array $columns
      * @return Collection
      */
-    public function getResults($columns = ['*'])
+    protected function getResults(Builder $qb, $columns = ['*'])
     {
 
-        $queryHash = $this->generateQueryHash();
+        if (!is_array($columns)) {
+            throw new \InvalidArgumentException('Columns parameter given is not an array');
+        }
+
+        $queryHash = $this->generateQueryHash($qb);
 
         $queryResult = $this->fetchQueryFromCache($queryHash);
 
         if (is_null($queryResult)) {
 
-            $queryResult = $this->model->get($columns);
+            $queryResult = $qb->get($columns);
 
             $this->cacheRepository->put($queryHash, $queryResult, $this->resultCacheLifeTime);
 
@@ -163,11 +169,20 @@ abstract class AbstractRepository implements RepositoryInterface
     }
 
     /**
+     * @return \Illuminate\Database\Query\Builder|static
+     */
+    protected function getDefaultQueryBuilder()
+    {
+        return $this->model->query()->getQuery();
+    }
+
+    /**
+     * @param Builder $qb
      * @return string
      */
-    protected function generateQueryHash()
+    protected function generateQueryHash(Builder $qb)
     {
-        return sha1($this->model->query()->getQuery()->toSql());
+        return sha1($qb->toSql());
     }
 
     /**
