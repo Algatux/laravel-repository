@@ -83,7 +83,7 @@ abstract class AbstractRepository implements RepositoryInterface
 
     /**
      * @param array $criteriaList
-     * @return $this
+     * @return Model $model
      * @throws ModelInstanceException
      */
     public function filterByCriteria(array $criteriaList = [])
@@ -91,18 +91,18 @@ abstract class AbstractRepository implements RepositoryInterface
 
         $this->reset();
 
+        $model = clone $this->model;
+
         /** @var AbstractQueryCriteria $criteria */
         foreach ($criteriaList as $criteria) {
 
             $this->validateCriteria($criteria);
 
-            $this->model = $criteria->apply($this->model);
+            $model = $criteria->apply($model);
 
         }
 
-        $this->modelHasCriteria = true;
-
-        return $this;
+        return $model;
 
     }
 
@@ -120,7 +120,7 @@ abstract class AbstractRepository implements RepositoryInterface
      * @param $criteria
      * @throws CriteriaNameNotStringException
      */
-    public function validateCriteria(AbstractQueryCriteria $criteria)
+    private function validateCriteria(AbstractQueryCriteria $criteria)
     {
 
         if (!$criteria instanceof AbstractQueryCriteria) {
@@ -187,13 +187,23 @@ abstract class AbstractRepository implements RepositoryInterface
             throw new \InvalidArgumentException('Columns parameter given is not an array');
         }
 
-        $queryHash = $this->generateQueryHash($qb);
+        $queryHash = null;
+        $queryResult = null;
 
-        $queryResult = $this->fetchQueryFromCache($queryHash);
+        if ($this->useResultCache) {
+
+            $queryHash = $this->generateQueryHash($qb);
+            $queryResult = $this->fetchQueryFromCache($queryHash);
+
+        }
 
         if (is_null($queryResult)) {
 
             $queryResult = $qb->get($columns);
+
+        }
+
+        if ($this->useResultCache) {
 
             $this->cacheRepository->put($queryHash, $queryResult, $this->resultCacheLifeTime);
 
