@@ -5,6 +5,7 @@ namespace Algatux\Repository\Test;
 use Algatux\Repository\Tests\Fakes\FakeCriteriaOne;
 use Algatux\Repository\Tests\Fakes\FakeModel;
 use Algatux\Repository\Tests\Fakes\FakeRepository;
+use Illuminate\Cache\Repository;
 use Illuminate\Container\Container;
 use Illuminate\Database\Eloquent\Model;
 
@@ -16,8 +17,7 @@ class TestRepository extends \PHPUnit_Framework_TestCase
     public function test_repo_initializes_itself()
     {
 
-        $app = $this->setupApplication();
-        $repo = $app->make(FakeRepository::class);
+        $repo = new FakeRepository($this->prophesize(Repository::class)->reveal());
 
         $this->assertInstanceOf(FakeRepository::class, $repo);
 
@@ -26,8 +26,7 @@ class TestRepository extends \PHPUnit_Framework_TestCase
     public function test_repository_exposes_a_valid_model_instance()
     {
 
-        $app = $this->setupApplication();
-        $repo = $app->make(FakeRepository::class);
+        $repo = new FakeRepository($this->prophesize(Repository::class)->reveal());
 
         $this->assertInstanceOf(Model::class, $repo->expose());
         $this->assertInstanceOf(FakeModel::class, $repo->expose());
@@ -37,12 +36,10 @@ class TestRepository extends \PHPUnit_Framework_TestCase
     public function test_criteria_will_be_applied_to_model()
     {
 
-        $app = $this->setupApplication();
-
-        $model = $app->make(FakeModel::class);
+        $model = new FakeModel;
 
         /** @var FakeRepository $repo */
-        $repo = $app->make(FakeRepository::class);
+        $repo = new FakeRepository($this->prophesize(Repository::class)->reveal());
 
         $criteria = $this->prophesize(FakeCriteriaOne::class);
 
@@ -52,19 +49,6 @@ class TestRepository extends \PHPUnit_Framework_TestCase
         $criteria->criteriaName()->willReturn();
 
         $repo->filterByCriteria([$criteria->reveal()]);
-
-    }
-
-    /**
-     * @return Application
-     */
-    private function setupApplication()
-    {
-
-        // Create the application such that the config is loaded.
-        $container = new Container();
-
-        return $container;
 
     }
 

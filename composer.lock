@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "e37abfbe8ab0a5437416434bd14ca212",
+    "hash": "60fc13c2b60760258819ec9a4b3bb2db",
     "packages": [
         {
             "name": "danielstjules/stringy",
@@ -130,8 +130,58 @@
             "time": "2014-12-20 21:24:13"
         },
         {
+            "name": "illuminate/cache",
+            "version": "v5.1.8",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/illuminate/cache.git",
+                "reference": "a15a873448c24b9657a91cfd97f65539eb040771"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/illuminate/cache/zipball/a15a873448c24b9657a91cfd97f65539eb040771",
+                "reference": "a15a873448c24b9657a91cfd97f65539eb040771",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/contracts": "5.1.*",
+                "illuminate/support": "5.1.*",
+                "nesbot/carbon": "~1.19",
+                "php": ">=5.5.9"
+            },
+            "suggest": {
+                "illuminate/database": "Required to use the database cache driver (5.1.*).",
+                "illuminate/filesystem": "Required to use the file cache driver (5.1.*).",
+                "illuminate/redis": "Required to use the redis cache driver (5.1.*)."
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "5.1-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Illuminate\\Cache\\": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Taylor Otwell",
+                    "email": "taylorotwell@gmail.com"
+                }
+            ],
+            "description": "The Illuminate Cache package.",
+            "homepage": "http://laravel.com",
+            "time": "2015-06-30 21:20:09"
+        },
+        {
             "name": "illuminate/container",
-            "version": "v5.1.6",
+            "version": "v5.1.8",
             "source": {
                 "type": "git",
                 "url": "https://github.com/illuminate/container.git",
@@ -174,16 +224,16 @@
         },
         {
             "name": "illuminate/contracts",
-            "version": "v5.1.1",
+            "version": "v5.1.8",
             "source": {
                 "type": "git",
                 "url": "https://github.com/illuminate/contracts.git",
-                "reference": "6e18848e5d332d802aa8bfa60b95e022023973f1"
+                "reference": "140dd18acb6be297fbd9870f8dda9d9d0a17c460"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/illuminate/contracts/zipball/6e18848e5d332d802aa8bfa60b95e022023973f1",
-                "reference": "6e18848e5d332d802aa8bfa60b95e022023973f1",
+                "url": "https://api.github.com/repos/illuminate/contracts/zipball/140dd18acb6be297fbd9870f8dda9d9d0a17c460",
+                "reference": "140dd18acb6be297fbd9870f8dda9d9d0a17c460",
                 "shasum": ""
             },
             "require": {
@@ -212,20 +262,20 @@
             ],
             "description": "The Illuminate Contracts package.",
             "homepage": "http://laravel.com",
-            "time": "2015-06-08 18:13:21"
+            "time": "2015-07-14 01:36:14"
         },
         {
             "name": "illuminate/database",
-            "version": "v5.1.6",
+            "version": "v5.1.8",
             "source": {
                 "type": "git",
                 "url": "https://github.com/illuminate/database.git",
-                "reference": "0aca69fe48c1253451a5fa286082fa99814591b6"
+                "reference": "ad33fd28df334f248b97cd7ffd747b78635ec0c4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/illuminate/database/zipball/0aca69fe48c1253451a5fa286082fa99814591b6",
-                "reference": "0aca69fe48c1253451a5fa286082fa99814591b6",
+                "url": "https://api.github.com/repos/illuminate/database/zipball/ad33fd28df334f248b97cd7ffd747b78635ec0c4",
+                "reference": "ad33fd28df334f248b97cd7ffd747b78635ec0c4",
                 "shasum": ""
             },
             "require": {
@@ -271,20 +321,20 @@
                 "orm",
                 "sql"
             ],
-            "time": "2015-07-03 08:31:13"
+            "time": "2015-07-20 16:50:34"
         },
         {
             "name": "illuminate/support",
-            "version": "v5.1.6",
+            "version": "v5.1.8",
             "source": {
                 "type": "git",
                 "url": "https://github.com/illuminate/support.git",
-                "reference": "9c6e35802e6e7c807170a0ee263d1bfcad6cbab5"
+                "reference": "2ba8a22a554aee9a412baa2e16e4387262d6d57c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/illuminate/support/zipball/9c6e35802e6e7c807170a0ee263d1bfcad6cbab5",
-                "reference": "9c6e35802e6e7c807170a0ee263d1bfcad6cbab5",
+                "url": "https://api.github.com/repos/illuminate/support/zipball/2ba8a22a554aee9a412baa2e16e4387262d6d57c",
+                "reference": "2ba8a22a554aee9a412baa2e16e4387262d6d57c",
                 "shasum": ""
             },
             "require": {
@@ -324,7 +374,7 @@
             ],
             "description": "The Illuminate Support package.",
             "homepage": "http://laravel.com",
-            "time": "2015-07-02 02:30:30"
+            "time": "2015-07-20 16:31:36"
         },
         {
             "name": "nesbot/carbon",

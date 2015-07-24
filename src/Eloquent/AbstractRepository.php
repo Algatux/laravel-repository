@@ -5,8 +5,8 @@ namespace Algatux\Repository\Eloquent;
 use Algatux\Repository\Contracts\RepositoryInterface;
 use Algatux\Repository\Exceptions\CriteriaNameNotStringException;
 use Algatux\Repository\Exceptions\ModelInstanceException;
+use Illuminate\Cache\Repository as CacheRepository;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Collection;
 
 /**
@@ -28,22 +28,30 @@ abstract class AbstractRepository implements RepositoryInterface
     /** @var int */
     protected $resultCacheLifeTime;
 
-    /** @var string */
-    protected $cacheResultName;
+    /** @var CacheRepository  */
+    protected $cacheRepository;
 
     /**
+     * @param CacheRepository $cacheRepository
      * @throws ModelInstanceException
      */
-    public function __construct()
+    public function __construct(CacheRepository $cacheRepository)
     {
+        $this->cacheRepository = $cacheRepository;
+
         $this->initModel();
     }
 
-    public function useCacheResult($use=true, $minutes=10)
+    /**
+     * @param bool|true $use
+     * @param int $minutesLifeTime
+     * @return $this
+     */
+    public function useCacheResult($use=true, $minutesLifeTime=1)
     {
         $this->useResultCache = $use;
-        $this->resultCacheLifeTime = $minutes;
-        return $this->model;
+        $this->resultCacheLifeTime = $minutesLifeTime;
+        return $this;
     }
 
     /**
@@ -72,36 +80,29 @@ abstract class AbstractRepository implements RepositoryInterface
     }
 
     /**
+     * Gets results based on actual conditions, will use cached result if previously specified
+     *
      * @param array $columns
      * @return Collection
      */
-    public function get($columns = ['*'])
+    public function getResults($columns = ['*'])
     {
 
-        return $this->model->get($columns);
+        $queryHash = $this->generateQueryHash();
 
-    }
+        $queryResult = $this->fetchQueryFromCache($queryHash);
 
-    /**
-     * @param $id
-     * @param string $id_field
-     * @return Model
-     * @throws ModelNotFoundException
-     */
-    public function find($id, $id_field = 'id')
-    {
+        if (is_null($queryResult)) {
+
+            $queryResult = $this->model->get($columns);
+
+            $this->cacheRepository->put($queryHash, $queryResult, $this->resultCacheLifeTime);
+
+        }
 
         $this->reset();
 
-        $result = $this->model->where($id_field, '=', $id)->first();
-
-        if (empty($result)) {
-            $e = new ModelNotFoundException();
-            $e->setModel($this->modelClassName());
-            throw $e;
-        }
-
-        return $result;
+        return $queryResult;
 
     }
 
@@ -156,10 +157,17 @@ abstract class AbstractRepository implements RepositoryInterface
         }
 
         $this->useResultCache = false;
-        $this->resultCacheLifeTime = 10;
-        $this->cacheResultName = null;
+        $this->resultCacheLifeTime = 1;
         $this->modelHasCriteria = false;
 
+    }
+
+    /**
+     * @return string
+     */
+    protected function generateQueryHash()
+    {
+        return sha1($this->model->query()->getQuery()->toSql());
     }
 
     /**
@@ -184,6 +192,27 @@ abstract class AbstractRepository implements RepositoryInterface
             throw new CriteriaNameNotStringException(get_class($criteria));
 
         }
+
+    }
+
+    /**
+     * @param string $queryHash
+     * @return Collection|Model|null
+     */
+    protected function fetchQueryFromCache($queryHash)
+    {
+
+        if ($this->useResultCache) {
+
+            if ($this->cacheRepository->has($queryHash)) {
+
+                return $this->cacheRepository->get($queryHash);
+
+            }
+
+        }
+
+        return null;
 
     }
 
