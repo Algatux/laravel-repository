@@ -23,13 +23,16 @@ abstract class AbstractRepository implements RepositoryInterface
     /** @var bool */
     protected $modelHasCriteria;
 
+    /** @var  string */
+    protected $cacheHashKeyPrefix;
+
     /** @var bool */
     protected $useResultCache;
 
     /** @var int */
     protected $resultCacheLifeTime;
 
-    /** @var CacheRepository  */
+    /** @var CacheRepository */
     protected $cacheRepository;
 
     /**
@@ -40,20 +43,43 @@ abstract class AbstractRepository implements RepositoryInterface
     {
         $this->cacheRepository = $cacheRepository;
 
+        $this->cacheHashKeyPrefix = 'algatux_laravel_repository';
         $this->initModel();
     }
 
     /**
-     * @param bool|true $use
-     * @param int $minutesLifeTime
-     * @return $this
+     * @throws ModelInstanceException
      */
-    protected function useCacheResult($use=true, $minutesLifeTime=1)
+    private function initModel()
     {
-        $this->useResultCache = $use;
-        $this->resultCacheLifeTime = $minutesLifeTime;
-        return $this;
+
+        if ($this->modelHasCriteria or !$this->model) {
+
+            $modelClassName = $this->modelClassName();
+
+            /** @var Model $model */
+            $model = new $modelClassName;
+
+            if (!$model instanceof Model) {
+                throw new ModelInstanceException($modelClassName);
+            }
+
+            $this->model = $model;
+
+        }
+
+        $this->useResultCache = false;
+        $this->resultCacheLifeTime = 1;
+        $this->modelHasCriteria = false;
+
     }
+
+    /**
+     * Must return model full qualified class name
+     *
+     * @return string
+     */
+    abstract protected function modelClassName();
 
     /**
      * @param array $criteriaList
@@ -78,6 +104,73 @@ abstract class AbstractRepository implements RepositoryInterface
 
         return $this;
 
+    }
+
+    /**
+     * Resets the model instance
+     *
+     * @throws ModelInstanceException
+     */
+    public function reset()
+    {
+        $this->initModel();
+    }
+
+    /**
+     * @param $criteria
+     * @throws CriteriaNameNotStringException
+     */
+    public function validateCriteria(AbstractQueryCriteria $criteria)
+    {
+
+        if (!$criteria instanceof AbstractQueryCriteria) {
+            throw new \InvalidArgumentException('Arument passed is not an array of only criterias');
+        }
+
+        if (is_string($criteria->criteriaName())) {
+            throw new CriteriaNameNotStringException(get_class($criteria));
+
+        }
+
+    }
+
+    /**
+     * Exposes Eloquent Model
+     *
+     * @param bool $initModel
+     * @return Model
+     */
+    public function expose($initModel = false)
+    {
+
+        if ($initModel) {
+
+            $this->reset();
+
+        }
+
+        return $this->model;
+
+    }
+
+    /**
+     * @param string $cacheHashKeyPrefix
+     */
+    public function setCacheHashKeyPrefix($cacheHashKeyPrefix)
+    {
+        $this->cacheHashKeyPrefix = $cacheHashKeyPrefix;
+    }
+
+    /**
+     * @param bool|true $use
+     * @param int $minutesLifeTime
+     * @return $this
+     */
+    protected function useCacheResult($use = true, $minutesLifeTime = 1)
+    {
+        $this->useResultCache = $use;
+        $this->resultCacheLifeTime = $minutesLifeTime;
+        return $this;
     }
 
     /**
@@ -113,101 +206,18 @@ abstract class AbstractRepository implements RepositoryInterface
     }
 
     /**
-     * Exposes Eloquent Model
-     *
-     * @param bool $initModel
-     * @return Model
-     */
-    public function expose($initModel = false)
-    {
-
-        if ($initModel) {
-
-            $this->reset();
-
-        }
-
-        return $this->model;
-
-    }
-
-    /**
-     * Resets the model instance
-     *
-     * @throws ModelInstanceException
-     */
-    public function reset()
-    {
-        $this->initModel();
-    }
-
-    /**
-     * @throws ModelInstanceException
-     */
-    private function initModel()
-    {
-
-        if ($this->modelHasCriteria or !$this->model) {
-
-            $modelClassName = $this->modelClassName();
-
-            /** @var Model $model */
-            $model = new $modelClassName;
-
-            if (!$model instanceof Model) {
-                throw new ModelInstanceException($modelClassName);
-            }
-
-            $this->model = $model;
-
-        }
-
-        $this->useResultCache = false;
-        $this->resultCacheLifeTime = 1;
-        $this->modelHasCriteria = false;
-
-    }
-
-    /**
-     * @return \Illuminate\Database\Query\Builder|static
-     */
-    protected function getDefaultQueryBuilder()
-    {
-        return $this->model->query()->getQuery();
-    }
-
-    /**
      * @param Builder $qb
      * @return string
      */
     private function generateQueryHash(Builder $qb)
     {
-        return sha1($qb->toSql() . ' ' . serialize($qb->getBindings()));
-    }
-
-    /**
-     * Must return model full qualified class name
-     *
-     * @return string
-     */
-    abstract protected function modelClassName();
-
-    /**
-     * @param $criteria
-     * @throws CriteriaNameNotStringException
-     */
-    public function validateCriteria(AbstractQueryCriteria $criteria)
-    {
-
-        if (!$criteria instanceof AbstractQueryCriteria) {
-            throw new \InvalidArgumentException('Arument passed is not an array of only criterias');
-        }
-
-        if (is_string($criteria->criteriaName())) {
-            throw new CriteriaNameNotStringException(get_class($criteria));
-
-        }
-
+        return sha1(
+            implode('_', [
+                $this->cacheHashKeyPrefix,
+                $qb->toSql(),
+                serialize($qb->getBindings())
+            ])
+        );
     }
 
     /**
@@ -229,6 +239,14 @@ abstract class AbstractRepository implements RepositoryInterface
 
         return null;
 
+    }
+
+    /**
+     * @return \Illuminate\Database\Query\Builder|static
+     */
+    protected function getDefaultQueryBuilder()
+    {
+        return $this->model->query()->getQuery();
     }
 
 }
