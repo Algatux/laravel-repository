@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "60fc13c2b60760258819ec9a4b3bb2db",
+    "hash": "ff8f5e0feb49276f8961294de88ff44c",
     "packages": [
         {
             "name": "danielstjules/stringy",

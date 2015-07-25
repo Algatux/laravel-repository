@@ -5,7 +5,8 @@ namespace Algatux\Repository\Eloquent;
 use Algatux\Repository\Contracts\RepositoryInterface;
 use Algatux\Repository\Exceptions\CriteriaNameNotStringException;
 use Algatux\Repository\Exceptions\ModelInstanceException;
-use Illuminate\Cache\Repository as CacheRepository;
+
+use Algatux\Repository\Cache\CacheManager;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Collection;
@@ -18,32 +19,29 @@ abstract class AbstractRepository implements RepositoryInterface
 {
 
     /** @var Model */
-    protected $model;
+    private $model;
 
     /** @var bool */
-    protected $modelHasCriteria;
+    private $modelHasCriteria;
 
     /** @var  string */
-    protected $cacheHashKeyPrefix;
+    private $cacheHashKeyPrefix;
 
     /** @var bool */
-    protected $useResultCache;
+    private $useResultCache;
 
-    /** @var int */
-    protected $resultCacheLifeTime;
-
-    /** @var CacheRepository */
-    protected $cacheRepository;
+    /** @var CacheManager  */
+    private $cacheManager;
 
     /**
-     * @param CacheRepository $cacheRepository
+     * @param CacheManager $cacheManager
      * @throws ModelInstanceException
      */
-    public function __construct(CacheRepository $cacheRepository)
+    public function __construct(CacheManager $cacheManager)
     {
-        $this->cacheRepository = $cacheRepository;
+        $this->cacheManager = $cacheManager;
+        $this->cacheManager->setCacheHashKeyPrefix('algatux_laravel_repository');
 
-        $this->cacheHashKeyPrefix = 'algatux_laravel_repository';
         $this->initModel();
     }
 
@@ -68,8 +66,9 @@ abstract class AbstractRepository implements RepositoryInterface
 
         }
 
+        $this->cacheManager->setCacheLifeTime(1);
+
         $this->useResultCache = false;
-        $this->resultCacheLifeTime = 1;
         $this->modelHasCriteria = false;
 
     }
@@ -169,7 +168,7 @@ abstract class AbstractRepository implements RepositoryInterface
     protected function useCacheResult($use = true, $minutesLifeTime = 1)
     {
         $this->useResultCache = $use;
-        $this->resultCacheLifeTime = $minutesLifeTime;
+        $this->cacheManager->setCacheLifeTime($minutesLifeTime);
         return $this;
     }
 
@@ -183,73 +182,42 @@ abstract class AbstractRepository implements RepositoryInterface
     protected function getResults(Builder $qb, $columns = ['*'])
     {
 
-        if (!is_array($columns)) {
-            throw new \InvalidArgumentException('Columns parameter given is not an array');
+        $this->checkColumnsField($columns);
+
+        $result = $this->fetchFromCache($qb);
+
+        if (is_null($result)) {
+            $result = $qb->get($columns);
         }
 
-        $queryHash = null;
-        $queryResult = null;
-
-        if ($this->useResultCache) {
-
-            $queryHash = $this->generateQueryHash($qb);
-            $queryResult = $this->fetchQueryFromCache($queryHash);
-
-        }
-
-        if (is_null($queryResult)) {
-
-            $queryResult = $qb->get($columns);
-
-        }
-
-        if ($this->useResultCache) {
-
-            $this->cacheRepository->put($queryHash, $queryResult, $this->resultCacheLifeTime);
-
-        }
+        $this->resultCacheStore($qb, $result);
 
         $this->reset();
 
-        return $queryResult;
+        return $result;
 
     }
 
-    /**
-     * @param Builder $qb
-     * @return string
-     */
-    private function generateQueryHash(Builder $qb)
-    {
-        return sha1(
-            implode('_', [
-                $this->cacheHashKeyPrefix,
-                $qb->toSql(),
-                serialize($qb->getBindings())
-            ])
-        );
-    }
-
-    /**
-     * @param string $queryHash
-     * @return Collection|Model|null
-     */
-    private function fetchQueryFromCache($queryHash)
+    public function getPaginatedResult(Builder $qb, $pages=10, $columns = ['*'], $pageStringName = 'page')
     {
 
-        if ($this->useResultCache) {
+        $this->checkColumnsField($columns);
 
-            if ($this->cacheRepository->has($queryHash)) {
+        $result = $this->fetchFromCache($qb);
 
-                return $this->cacheRepository->get($queryHash);
-
-            }
-
+        if (is_null($result)) {
+            $result = $qb->paginate($pages, $columns, $pageStringName);
         }
 
-        return null;
+        $this->resultCacheStore($qb, $result);
+
+        $this->reset();
+
+        return $result;
 
     }
+
+
 
     /**
      * @return \Illuminate\Database\Query\Builder|static
@@ -257,6 +225,40 @@ abstract class AbstractRepository implements RepositoryInterface
     protected function getDefaultQueryBuilder()
     {
         return $this->model->query()->getQuery();
+    }
+
+    /**
+     * @param $columns
+     */
+    private function checkColumnsField($columns)
+    {
+        if (!is_array($columns)) {
+            throw new \InvalidArgumentException('Columns parameter given is not an array');
+        }
+    }
+
+    /**
+     * @param Builder $qb
+     * @return \Illuminate\Database\Eloquent\Collection|null
+     */
+    private function fetchFromCache(Builder $qb)
+    {
+        if ($this->useResultCache) {
+            return $this->cacheManager->tryFetchResultFromCache($qb);
+        }
+
+        return null;
+    }
+
+    /**
+     * @param Builder $qb
+     * @param $result
+     */
+    protected function resultCacheStore(Builder $qb, $result)
+    {
+        if ($this->useResultCache) {
+            $this->cacheManager->storeResultInCache($qb, $result);
+        }
     }
 
 }
