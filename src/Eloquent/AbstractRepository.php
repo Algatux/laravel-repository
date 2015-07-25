@@ -189,7 +189,7 @@ abstract class AbstractRepository implements RepositoryInterface
             $result = $qb->get($columns);
         }
 
-        $this->resultCacheStore($qb, $result);
+        $this->resultCacheStore($result);
 
         $this->reset();
 
