@@ -1,7 +1,7 @@
 {
     "name": "algatux/laravel-repository",
-    "description": "Laravel 5 Model Repository",
-    "keywords": ["Laravel", "Eloquent", "Models", "Repository", "Pattern"],
+    "description": "Laravel 5.1 Model Repository with Cached results",
+    "keywords": ["Laravel", "Eloquent", "Cache", "Models", "Repository"],
     "type": "library",
     "require": {
         "php": ">=5.5",
