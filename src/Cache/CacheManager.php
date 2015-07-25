@@ -3,6 +3,7 @@
 namespace Algatux\Repository\Cache;
 
 use Illuminate\Cache\Repository as CacheRepository;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Query\Builder;
 
@@ -18,6 +19,9 @@ class CacheManager
     /** @var CacheRepository */
     protected $cache;
 
+    /** #var string */
+    protected $actualQueryHash;
+
     /**
      * @param CacheRepository $cacheRepository
      */
@@ -30,16 +34,17 @@ class CacheManager
 
     /**
      * @param Builder $qb
-     * @return string
+     * @param array $attributes
      */
-    private function generateQueryHashFromQueryBuilder(Builder $qb)
+    private function generateQueryHashFromQueryBuilder(Builder $qb, array $attributes)
     {
 
-        return sha1(
+        $this->actualQueryHash = sha1(
             implode('_', [
                 $this->cacheHashKeyPrefix,
                 $qb->toSql(),
-                serialize($qb->getBindings())
+                serialize($qb->getBindings()),
+                serialize($attributes)
             ])
         );
 
@@ -47,16 +52,17 @@ class CacheManager
 
     /**
      * @param Builder $qb
-     * @return Collection|null
+     * @param array $attributes
+     * @return LengthAwarePaginator|Collection|null
      */
-    public function tryFetchResultFromCache(Builder $qb)
+    public function tryFetchResultFromCache(Builder $qb, array $attributes=[])
     {
 
-        $queryHash = $this->generateQueryHashFromQueryBuilder($qb);
+        $this->generateQueryHashFromQueryBuilder($qb,$attributes);
 
-        if ($this->cache->has($queryHash)) {
+        if ($this->cache->has($this->actualQueryHash)) {
 
-            return $this->cache->get($queryHash);
+            return $this->cache->get($this->actualQueryHash);
 
         }
 
@@ -92,14 +98,12 @@ class CacheManager
     }
 
     /**
-     * @param $qb
      * @param $result
      */
-    public function storeResultInCache($qb, $result)
+    public function storeResultInCache($result)
     {
 
-        $queryHash = $this->generateQueryHashFromQueryBuilder($qb);
-        $this->cache->put($queryHash, $result, $this->cacheLifeTime);
+        $this->cache->put($this->actualQueryHash, $result, $this->cacheLifeTime);
 
     }
 

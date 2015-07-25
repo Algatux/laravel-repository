@@ -161,13 +161,12 @@ abstract class AbstractRepository implements RepositoryInterface
     }
 
     /**
-     * @param bool|true $use
      * @param int $minutesLifeTime
      * @return $this
      */
-    protected function useCacheResult($use = true, $minutesLifeTime = 1)
+    protected function useCacheResult($minutesLifeTime = 1)
     {
-        $this->useResultCache = $use;
+        $this->useResultCache = true;
         $this->cacheManager->setCacheLifeTime($minutesLifeTime);
         return $this;
     }
@@ -198,26 +197,31 @@ abstract class AbstractRepository implements RepositoryInterface
 
     }
 
+    /**
+     * @param Builder $qb
+     * @param int $pages
+     * @param array $columns
+     * @param string $pageStringName
+     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator|\Illuminate\Database\Eloquent\Collection|null
+     */
     public function getPaginatedResult(Builder $qb, $pages=10, $columns = ['*'], $pageStringName = 'page')
     {
 
         $this->checkColumnsField($columns);
 
-        $result = $this->fetchFromCache($qb);
+        $result = $this->fetchFromCache($qb,['pageRes'=>$pages,'columns'=>$columns,'pageString'=>$pageStringName]);
 
         if (is_null($result)) {
             $result = $qb->paginate($pages, $columns, $pageStringName);
         }
 
-        $this->resultCacheStore($qb, $result);
+        $this->resultCacheStore($result);
 
         $this->reset();
 
         return $result;
 
     }
-
-
 
     /**
      * @return \Illuminate\Database\Query\Builder|static
@@ -239,25 +243,25 @@ abstract class AbstractRepository implements RepositoryInterface
 
     /**
      * @param Builder $qb
+     * @param array $attributes
      * @return \Illuminate\Database\Eloquent\Collection|null
      */
-    private function fetchFromCache(Builder $qb)
+    private function fetchFromCache(Builder $qb, array $attributes=[])
     {
         if ($this->useResultCache) {
-            return $this->cacheManager->tryFetchResultFromCache($qb);
+            return $this->cacheManager->tryFetchResultFromCache($qb,$attributes);
         }
 
         return null;
     }
 
     /**
-     * @param Builder $qb
      * @param $result
      */
-    protected function resultCacheStore(Builder $qb, $result)
+    protected function resultCacheStore($result)
     {
         if ($this->useResultCache) {
-            $this->cacheManager->storeResultInCache($qb, $result);
+            $this->cacheManager->storeResultInCache($result);
         }
     }
 
