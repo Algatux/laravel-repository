@@ -30,9 +30,8 @@
         "preferred-install": "dist"
     },
     "suggest": {
-        "illuminate/database": "Required to use the database cache driver (5.1.*).",
-        "illuminate/filesystem": "Required to use the file cache driver (5.1.*).",
-        "illuminate/redis": "Required to use the redis cache driver (5.1.*)."
+        "illuminate/filesystem": "Suggested to use the file cache driver (5.1.*).",
+        "illuminate/redis": "Suggested to use the redis cache driver (5.1.*)."
     },
     "minimum-stability": "stable"
 }

@@ -2,12 +2,14 @@
 
 namespace Algatux\Repository\Test;
 
+use Algatux\Repository\Eloquent\AbstractRepository;
 use Algatux\Repository\Tests\Fakes\FakeCriteriaOne;
 use Algatux\Repository\Tests\Fakes\FakeModel;
 use Algatux\Repository\Tests\Fakes\FakeRepository;
 use Algatux\Repository\Cache\CacheManager;
 use Illuminate\Cache\Repository;
 use Illuminate\Database\Eloquent\Model;
+use Prophecy\Argument;
 
 require __DIR__ . '/../../vendor/autoload.php';
 
@@ -19,7 +21,7 @@ class TestRepository extends \PHPUnit_Framework_TestCase
 
         $repo = new FakeRepository($this->getCacheManager());
 
-        $this->assertInstanceOf(FakeRepository::class, $repo);
+        $this->assertInstanceOf(AbstractRepository::class, $repo);
 
     }
 
@@ -43,12 +45,16 @@ class TestRepository extends \PHPUnit_Framework_TestCase
 
         $criteria = $this->prophesize(FakeCriteriaOne::class);
 
-        $criteria->apply($model)->shouldBeCalled();
-        $criteria->apply($model)->willReturn(null);
-        $criteria->criteriaName()->shouldBeCalled();
-        $criteria->criteriaName()->willReturn();
+        $criteria->apply($model)->shouldBeCalledTimes(1);
+        $criteria->apply($model)->willReturn($model);
+        $criteria->modelScopeClass()->shouldBeCalledTimes(1);
+        $criteria->modelScopeClass()->willReturn(FakeModel::class);
+        $criteria->criteriaName()->shouldBeCalledTimes(1);
+        $criteria->criteriaName()->willReturn('fake_ctriteria_name');
 
-        $repo->filterByCriteria([$criteria->reveal()]);
+        $criteriaModel = $repo->filterByCriteria([$criteria->reveal()]);
+
+        $this->assertInstanceOf(FakeModel::class,$criteriaModel);
 
     }
 

@@ -31,10 +31,6 @@ abstract class AbstractQueryCriteria implements QueryCriteriaInterface
      */
     public function apply(Model $model)
     {
-        $expectedClassNamespace = $this->modelClass();
-        if (!$model instanceof $expectedClassNamespace) {
-            throw new ModelInstanceException($model);
-        }
 
         return $this->criteria($model);
 
@@ -45,7 +41,7 @@ abstract class AbstractQueryCriteria implements QueryCriteriaInterface
      *
      * @return string
      */
-    abstract protected function modelClass();
+    abstract public function modelScopeClass();
 
     /**
      * @param Model $model

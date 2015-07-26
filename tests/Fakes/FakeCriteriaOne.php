@@ -13,7 +13,7 @@ class FakeCriteriaOne extends AbstractQueryCriteria
      *
      * @return string
      */
-    protected function modelClass()
+    public function modelScopeClass()
     {
         return FakeModel::class;
     }

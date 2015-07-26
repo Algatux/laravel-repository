@@ -3,10 +3,12 @@
 namespace Algatux\Repository\Eloquent;
 
 use Algatux\Repository\Contracts\RepositoryInterface;
+use Algatux\Repository\Cache\CacheManager;
+
 use Algatux\Repository\Exceptions\CriteriaNameNotStringException;
+use Algatux\Repository\Exceptions\CriteriaScopeModelException;
 use Algatux\Repository\Exceptions\ModelInstanceException;
 
-use Algatux\Repository\Cache\CacheManager;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Collection;
@@ -19,7 +21,10 @@ abstract class AbstractRepository implements RepositoryInterface
 {
 
     /** @var Model */
-    private $model;
+    protected $model;
+
+    /** @var CacheManager  */
+    protected $cacheManager;
 
     /** @var bool */
     private $modelHasCriteria;
@@ -29,9 +34,6 @@ abstract class AbstractRepository implements RepositoryInterface
 
     /** @var bool */
     private $useResultCache;
-
-    /** @var CacheManager  */
-    private $cacheManager;
 
     /**
      * @param CacheManager $cacheManager
@@ -99,6 +101,7 @@ abstract class AbstractRepository implements RepositoryInterface
 
             $model = $criteria->apply($model);
 
+
         }
 
         return $model;
@@ -110,25 +113,29 @@ abstract class AbstractRepository implements RepositoryInterface
      *
      * @throws ModelInstanceException
      */
-    public function reset()
+    protected function reset()
     {
         $this->initModel();
     }
 
     /**
-     * @param $criteria
+     * @param AbstractQueryCriteria $criteria
+     * @throws CriteriaScopeModelException
      * @throws CriteriaNameNotStringException
      */
-    private function validateCriteria(AbstractQueryCriteria $criteria)
+    protected function validateCriteria(AbstractQueryCriteria $criteria)
     {
 
         if (!$criteria instanceof AbstractQueryCriteria) {
-            throw new \InvalidArgumentException('Arument passed is not an array of only criterias');
+            throw new \InvalidArgumentException('Arument passed is not a criteria');
         }
 
-        if (is_string($criteria->criteriaName())) {
-            throw new CriteriaNameNotStringException(get_class($criteria));
+        if ($criteria->modelScopeClass() !== $this->modelClassName()) {
+            throw new CriteriaScopeModelException(get_class($criteria));
+        }
 
+        if (!is_string($criteria->criteriaName())) {
+            throw new CriteriaNameNotStringException(get_class($criteria));
         }
 
     }
