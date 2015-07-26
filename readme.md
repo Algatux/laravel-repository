@@ -6,10 +6,10 @@
 
 ####Features
 
-Laravel Repository is a very simple shortcut to mantain organized models that you use around of your projects. 
+Laravel Repository is a very simple shortcut to mantain and organize models that you can use in your projects. 
 Defining your "library" of interrogation methods in one unique class you'll be able to simply maintain them.
 This Repository pattern implementation comes with caching possibility out of the box, allowing you to skip database interrogation when not really needed.
-There is an option to define some Criteria classes (actually under development and not working very well) that will leto you to define reusable sets of conditions whereby interrogate your models.
+There is an option to define some Criteria classes (actually under development and not working very well) that will let you define reusable sets of conditions whereby interrogate your models.
 
 ####Basic Usage
 
