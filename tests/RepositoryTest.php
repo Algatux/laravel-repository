@@ -1,25 +1,22 @@
 <?php
 
-namespace Algatux\Repository\Test;
+namespace Algatux\Repository\Tests;
 
 use Algatux\Repository\Eloquent\AbstractRepository;
+use Algatux\Repository\Managers\ModelManager;
 use Algatux\Repository\Tests\Fakes\FakeCriteriaOne;
 use Algatux\Repository\Tests\Fakes\FakeModel;
 use Algatux\Repository\Tests\Fakes\FakeRepository;
-use Algatux\Repository\Cache\CacheManager;
-use Illuminate\Cache\Repository;
 use Illuminate\Database\Eloquent\Model;
-use Prophecy\Argument;
 
-require __DIR__ . '/../../vendor/autoload.php';
-
-class TestRepository extends \PHPUnit_Framework_TestCase
+class RepositoryTest extends BaseTestCase
 {
 
     public function test_repo_initializes_itself()
     {
 
-        $repo = new FakeRepository($this->getCacheManager());
+        /** @var FakeRepository $repo */
+        $repo = new FakeRepository($this->getModelManager()->reveal(), $this->getQueryManager()->reveal());
 
         $this->assertInstanceOf(AbstractRepository::class, $repo);
 
@@ -28,7 +25,10 @@ class TestRepository extends \PHPUnit_Framework_TestCase
     public function test_repository_exposes_a_valid_model_instance()
     {
 
-        $repo = new FakeRepository($this->getCacheManager());
+        $modelManager = new ModelManager();
+        $modelManager->setModelClassName(FakeModel::class);
+        /** @var FakeRepository $repo */
+        $repo = new FakeRepository($modelManager, $this->getQueryManager()->reveal());
 
         $this->assertInstanceOf(Model::class, $repo->expose());
         $this->assertInstanceOf(FakeModel::class, $repo->expose());
@@ -40,8 +40,11 @@ class TestRepository extends \PHPUnit_Framework_TestCase
 
         $model = new FakeModel;
 
+        $modelManager = new ModelManager();
+        $modelManager->setModelClassName(FakeModel::class);
+
         /** @var FakeRepository $repo */
-        $repo = new FakeRepository($this->getCacheManager());
+        $repo = new FakeRepository($modelManager, $this->getQueryManager()->reveal());
 
         $criteria = $this->prophesize(FakeCriteriaOne::class);
 
@@ -56,16 +59,6 @@ class TestRepository extends \PHPUnit_Framework_TestCase
 
         $this->assertInstanceOf(FakeModel::class,$criteriaModel);
 
-    }
-
-    /**
-     * @return CacheManager
-     */
-    private function getCacheManager()
-    {
-        /** @var Repository $cache */
-        $cache = $this->prophesize(Repository::class)->reveal();
-        return new CacheManager($cache);
     }
 
 }

@@ -15,4 +15,4 @@ before_script:
   - composer install
 
 script:
-  - vendor/bin/phpunit tests/Repository/TestRepository.php
+  - vendor/bin/phpunit -c phpunit.xml

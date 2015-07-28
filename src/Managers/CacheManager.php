@@ -1,14 +1,16 @@
 <?php
 
-namespace Algatux\Repository\Cache;
+namespace Algatux\Repository\Managers;
 
+use Algatux\Repository\Eloquent\AbstractRepository;
 use Illuminate\Cache\Repository as CacheRepository;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Database\Query\Builder;
 
 class CacheManager
 {
+
+    const DEFAULT_CACHE_LIFETIME = 1;
 
     /** @var  string */
     protected $cacheHashKeyPrefix;
@@ -29,43 +31,37 @@ class CacheManager
     {
 
         $this->cache = $cacheRepository;
+        $this->cacheLifeTime = self::DEFAULT_CACHE_LIFETIME;
 
     }
 
     /**
-     * @param Builder $qb
      * @param array $attributes
+     * @return string
      */
-    private function generateQueryHashFromQueryBuilder(Builder $qb, array $attributes)
+    private function generateQueryHashFromQueryBuilder(array $attributes)
     {
 
-        $this->actualQueryHash = sha1(
-            implode('_', [
-                $this->cacheHashKeyPrefix,
-                $qb->toSql(),
-                serialize($qb->getBindings()),
-                serialize($attributes)
-            ])
-        );
+        $haskKeyPrefix = $this->cacheHashKeyPrefix ? $this->cacheHashKeyPrefix : AbstractRepository::HASH_KEY_PREFIX;
+
+        return sha1($haskKeyPrefix . "_" . serialize($attributes));
 
     }
 
     /**
-     * @param Builder $qb
      * @param array $attributes
      * @return LengthAwarePaginator|Collection|null
      */
-    public function tryFetchResultFromCache(Builder $qb, array $attributes=[])
+    public function tryFetchResultFromCache(array $attributes = [])
     {
 
-        $this->generateQueryHashFromQueryBuilder($qb,$attributes);
+        $queryHash = $this->generateQueryHashFromQueryBuilder($attributes);
 
-        if ($this->cache->has($this->actualQueryHash)) {
+        if ($this->cache->has($queryHash)) {
 
-            return $this->cache->get($this->actualQueryHash);
+            return $this->cache->get($queryHash);
 
         }
-
 
         return null;
 
@@ -99,11 +95,14 @@ class CacheManager
 
     /**
      * @param $result
+     * @param array $attributes
      */
-    public function storeResultInCache($result)
+    public function storeResultInCache($result, array $attributes)
     {
 
-        $this->cache->put($this->actualQueryHash, $result, $this->cacheLifeTime);
+        $queryHash = $this->generateQueryHashFromQueryBuilder($attributes);
+
+        $this->cache->put($queryHash, $result, $this->cacheLifeTime);
 
     }
 
